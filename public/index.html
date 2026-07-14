@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stress Test Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <span class="logo-icon">⚡</span>
+          <div>
+            <h1>Stress Test Dashboard</h1>
+            <p class="subtitle">Monitoramento de carga em tempo real</p>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-badge" id="connectionStatus">
+          <span class="status-dot"></span>
+          <span>Conectando...</span>
+        </div>
+        <button class="btn btn-secondary" id="resetBtn">Resetar Métricas</button>
+        <a href="/api/endpoints" class="btn btn-primary" target="_blank">Ver Endpoints</a>
+      </div>
+    </header>
+
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">RPS Atual</span>
+        <span class="kpi-value" id="kpiRps">0</span>
+        <span class="kpi-unit">req/s</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Total Requisições</span>
+        <span class="kpi-value" id="kpiTotal">0</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Conexões Ativas</span>
+        <span class="kpi-value" id="kpiConnections">0</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Taxa de Erro</span>
+        <span class="kpi-value error" id="kpiErrorRate">0%</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Latência Média</span>
+        <span class="kpi-value" id="kpiAvgLatency">0</span>
+        <span class="kpi-unit">ms</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Uptime</span>
+        <span class="kpi-value small" id="kpiUptime">0s</span>
+      </div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="chart-card wide">
+        <h2>Requisições por Segundo</h2>
+        <canvas id="rpsChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Latência (ms)</h2>
+        <canvas id="latencyChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Erros por Segundo</h2>
+        <canvas id="errorChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Distribuição de Status</h2>
+        <canvas id="statusChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Percentis de Latência</h2>
+        <canvas id="percentileChart"></canvas>
+      </div>
+    </section>
+
+    <section class="tables-grid">
+      <div class="table-card">
+        <h2>Endpoints Mais Requisitados</h2>
+        <div class="table-wrapper">
+          <table id="endpointsTable">
+            <thead>
+              <tr>
+                <th>Método</th>
+                <th>Endpoint</th>
+                <th>Requisições</th>
+                <th>Lat. Média</th>
+                <th>Min / Max</th>
+                <th>Erros</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card">
+        <h2>Requisições Recentes</h2>
+        <div class="table-wrapper">
+          <table id="recentTable">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Método</th>
+                <th>Endpoint</th>
+                <th>Status</th>
+                <th>Latência</th>
+                <th>IP</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="examples-card">
+      <h2>Exemplos de Teste de Carga</h2>
+      <div class="examples-grid">
+        <div class="example-block">
+          <h3>curl</h3>
+          <pre><code>curl http://localhost:3000/api/stress/fast
+
+curl "http://localhost:3000/api/stress/slow?delay=1000"
+
+for i in $(seq 1 100); do
+  curl -s http://localhost:3000/api/stress/fast &
+done</code></pre>
+        </div>
+        <div class="example-block">
+          <h3>ddosify</h3>
+          <pre><code>ddosify -t http://localhost:3000/api/stress/fast -n 100 -c 10
+
+ddosify -t http://localhost:3000/api/stress/slow?delay=200 \
+  -n 50 -c 5 -d 30s
+
+ddosify -t http://localhost:3000/api/stress/random \
+  -n 200 -c 20 -d 1m</code></pre>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

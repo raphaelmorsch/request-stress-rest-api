@@ -1,0 +1,18 @@
+{
+  "name": "request-stress-rest-api",
+  "version": "1.0.0",
+  "description": "API REST para testes de carga e stress com dashboard de métricas em tempo real",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["stress-test", "load-test", "api", "metrics", "dashboard"],
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
