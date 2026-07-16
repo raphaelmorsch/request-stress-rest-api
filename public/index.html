@@ -11,14 +11,18 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <div class="pf-v6-c-page" id="page-default-nav">
+  <div class="pf-v6-c-page pf-m-no-sidebar" id="page-default-nav">
     <header class="pf-v6-c-masthead" id="page-default-nav-header">
       <div class="pf-v6-c-masthead__main">
         <a class="pf-v6-c-masthead__brand" href="/">
-          <div class="pf-v6-c-brand brand-text">
-            <span class="pf-v6-c-brand__logo brand-mark" aria-hidden="true">⚡</span>
-            <span class="brand-name">Stress Test API</span>
-          </div>
+          <img
+            class="pf-v6-c-brand brand-logo"
+            src="/img/redhat-logo-on-dark.svg"
+            alt="Red Hat"
+            width="151"
+            height="36"
+          >
+          <span class="brand-name">Stress Test API</span>
         </a>
       </div>
       <div class="pf-v6-c-masthead__content">
@@ -53,9 +57,9 @@
       </div>
     </header>
 
-    <main class="pf-v6-c-page__main" tabindex="-1" id="main-content">
-      <div class="pf-v6-c-page__main-container">
-        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+    <div class="pf-v6-c-page__main-container" tabindex="-1" id="main-content">
+      <main class="pf-v6-c-page__main">
+        <section class="pf-v6-c-page__main-section">
           <div class="pf-v6-c-page__main-body">
             <div class="pf-v6-c-content pf-v6-u-mb-md">
               <h1 class="pf-v6-c-title pf-m-2xl">Dashboard de carga</h1>
@@ -64,7 +68,7 @@
           </div>
         </section>
 
-        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+        <section class="pf-v6-c-page__main-section">
           <div class="pf-v6-c-page__main-body">
             <div class="pf-v6-l-gallery pf-m-gutter kpi-gallery">
               <div class="pf-v6-c-card pf-m-compact">
@@ -133,7 +137,7 @@
           </div>
         </section>
 
-        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+        <section class="pf-v6-c-page__main-section">
           <div class="pf-v6-c-page__main-body">
             <div class="pf-v6-l-grid pf-m-gutter">
               <div class="pf-v6-l-grid__item pf-m-12-col">
@@ -210,7 +214,7 @@
           </div>
         </section>
 
-        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+        <section class="pf-v6-c-page__main-section">
           <div class="pf-v6-c-page__main-body">
             <div class="pf-v6-l-grid pf-m-gutter">
               <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-xl">
@@ -269,7 +273,7 @@
           </div>
         </section>
 
-        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+        <section class="pf-v6-c-page__main-section">
           <div class="pf-v6-c-page__main-body">
             <div class="pf-v6-c-card">
               <div class="pf-v6-c-card__header">
@@ -312,8 +316,8 @@ ddosify -t http://localhost:3000/api/stress/random \
             </div>
           </div>
         </section>
-      </div>
-    </main>
+      </main>
+    </div>
   </div>
 
   <script src="/js/dashboard.js"></script>

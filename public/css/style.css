@@ -1,22 +1,77 @@
 /* App-specific overrides on top of PatternFly */
 
-.brand-text {
-  display: flex;
+.pf-v6-c-masthead__brand {
+  display: inline-flex;
   align-items: center;
-  gap: var(--pf-t--global--spacer--sm);
-  color: var(--pf-t--global--text--color--regular);
+  gap: var(--pf-t--global--spacer--md);
   text-decoration: none;
 }
 
-.brand-mark {
-  font-size: 1.5rem;
-  line-height: 1;
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 2.25rem; /* 36px — altura padrão de brand no masthead */
+  max-width: 9.5rem;
 }
 
 .brand-name {
   font-family: var(--pf-t--global--font--family--heading);
   font-size: var(--pf-t--global--font--size--heading--sm);
   font-weight: var(--pf-t--global--font--weight--heading--bold);
+  color: var(--pf-t--global--text--color--regular);
+  white-space: nowrap;
+}
+
+/*
+ * PatternFly Page assume sidebar em >=75rem ("sidebar | main").
+ * Sem sidebar, forçamos layout de coluna única em largura total.
+ */
+.pf-v6-c-page.pf-m-no-sidebar {
+  display: flex !important;
+  flex-direction: column;
+  grid-template-areas: none !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar > .pf-v6-c-masthead {
+  grid-area: unset !important;
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar > .pf-v6-c-page__main-container {
+  grid-area: unset !important;
+  flex: 1 1 auto;
+  align-self: stretch !important;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  margin-inline-start: var(--pf-t--global--spacer--lg);
+  margin-inline-end: var(--pf-t--global--spacer--lg);
+}
+
+/* Masthead: ações alinhadas à direita em toda a largura */
+.pf-v6-c-page.pf-m-no-sidebar > .pf-v6-c-masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar .pf-v6-c-masthead__content {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar .pf-v6-c-masthead__content .pf-v6-c-toolbar {
+  width: 100%;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar .pf-v6-c-toolbar__content-section {
+  justify-content: flex-end;
 }
 
 .kpi-gallery {
