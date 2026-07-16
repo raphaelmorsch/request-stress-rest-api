@@ -44,6 +44,10 @@ app.get('/api/endpoints', (_req, res) => {
   });
 });
 
+app.use(
+  '/patternfly',
+  express.static(path.join(__dirname, '../node_modules/@patternfly/patternfly'))
+);
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('*', (_req, res) => {

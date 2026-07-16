@@ -1,3 +1,16 @@
+const PF_COLORS = {
+  blue: '#0066cc',
+  purple: '#5752d1',
+  red: '#c9190b',
+  green: '#3e8635',
+  cyan: '#009596',
+  orange: '#ec7a08',
+  gold: '#f0ab00',
+  gray: '#6a6e73',
+  text: '#c7c7c7',
+  grid: 'rgba(255, 255, 255, 0.12)',
+};
+
 const chartDefaults = {
   responsive: true,
   maintainAspectRatio: false,
@@ -7,12 +20,12 @@ const chartDefaults = {
   },
   scales: {
     x: {
-      ticks: { color: '#64748b', maxTicksLimit: 8, font: { size: 10 } },
-      grid: { color: 'rgba(42, 53, 72, 0.5)' },
+      ticks: { color: PF_COLORS.text, maxTicksLimit: 8, font: { size: 10 } },
+      grid: { color: PF_COLORS.grid },
     },
     y: {
-      ticks: { color: '#64748b', font: { size: 10 } },
-      grid: { color: 'rgba(42, 53, 72, 0.5)' },
+      ticks: { color: PF_COLORS.text, font: { size: 10 } },
+      grid: { color: PF_COLORS.grid },
       beginAtZero: true,
     },
   },
@@ -27,7 +40,7 @@ function createLineChart(ctx, label, color) {
         label,
         data: [],
         borderColor: color,
-        backgroundColor: color.replace(')', ', 0.1)').replace('rgb', 'rgba'),
+        backgroundColor: `${color}33`,
         fill: true,
         tension: 0.3,
         pointRadius: 0,
@@ -41,19 +54,19 @@ function createLineChart(ctx, label, color) {
 const rpsChart = createLineChart(
   document.getElementById('rpsChart'),
   'RPS',
-  'rgb(59, 130, 246)'
+  PF_COLORS.blue
 );
 
 const latencyChart = createLineChart(
   document.getElementById('latencyChart'),
   'Latência (ms)',
-  'rgb(168, 85, 247)'
+  PF_COLORS.purple
 );
 
 const errorChart = createLineChart(
   document.getElementById('errorChart'),
   'Erros',
-  'rgb(239, 68, 68)'
+  PF_COLORS.red
 );
 
 const statusChart = new Chart(document.getElementById('statusChart'), {
@@ -63,8 +76,14 @@ const statusChart = new Chart(document.getElementById('statusChart'), {
     datasets: [{
       data: [],
       backgroundColor: [
-        '#22c55e', '#3b82f6', '#f59e0b', '#ef4444',
-        '#a855f7', '#06b6d4', '#ec4899', '#84cc16',
+        PF_COLORS.green,
+        PF_COLORS.blue,
+        PF_COLORS.gold,
+        PF_COLORS.red,
+        PF_COLORS.purple,
+        PF_COLORS.cyan,
+        PF_COLORS.orange,
+        PF_COLORS.gray,
       ],
       borderWidth: 0,
     }],
@@ -75,7 +94,7 @@ const statusChart = new Chart(document.getElementById('statusChart'), {
     plugins: {
       legend: {
         position: 'right',
-        labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 },
+        labels: { color: PF_COLORS.text, font: { size: 11 }, boxWidth: 12 },
       },
     },
   },
@@ -88,13 +107,13 @@ const percentileChart = new Chart(document.getElementById('percentileChart'), {
     datasets: [{
       data: [0, 0, 0, 0, 0],
       backgroundColor: [
-        'rgba(34, 197, 94, 0.7)',
-        'rgba(59, 130, 246, 0.7)',
-        'rgba(168, 85, 247, 0.7)',
-        'rgba(6, 182, 212, 0.7)',
-        'rgba(239, 68, 68, 0.7)',
+        PF_COLORS.green,
+        PF_COLORS.blue,
+        PF_COLORS.purple,
+        PF_COLORS.cyan,
+        PF_COLORS.red,
       ],
-      borderRadius: 6,
+      borderRadius: 4,
     }],
   },
   options: {
@@ -118,11 +137,42 @@ function formatUptime(ms) {
   return `${sec}s`;
 }
 
-function statusClass(code) {
-  if (code < 300) return 'status-2xx';
-  if (code < 400) return 'status-3xx';
-  if (code < 500) return 'status-4xx';
-  return 'status-5xx';
+function methodLabelClass(method) {
+  const map = {
+    GET: 'pf-m-green',
+    POST: 'pf-m-blue',
+    PUT: 'pf-m-orange',
+    PATCH: 'pf-m-purple',
+    DELETE: 'pf-m-red',
+  };
+  return map[method] || 'pf-m-grey';
+}
+
+function statusLabelClass(code) {
+  if (code < 300) return 'pf-m-success';
+  if (code < 400) return 'pf-m-blue';
+  if (code < 500) return 'pf-m-warning';
+  return 'pf-m-danger';
+}
+
+function pfLabel(text, modifier) {
+  return `<span class="pf-v6-c-label pf-m-compact ${modifier}">
+    <span class="pf-v6-c-label__content">
+      <span class="pf-v6-c-label__text">${text}</span>
+    </span>
+  </span>`;
+}
+
+function emptyTableRow(colspan, message) {
+  return `<tr class="pf-v6-c-table__tr" role="row">
+    <td class="pf-v6-c-table__td" colspan="${colspan}" role="cell">
+      <div class="pf-v6-c-empty-state pf-m-xs">
+        <div class="pf-v6-c-empty-state__content">
+          <div class="pf-v6-c-empty-state__body">${message}</div>
+        </div>
+      </div>
+    </td>
+  </tr>`;
 }
 
 function updateKPIs(data) {
@@ -135,10 +185,8 @@ function updateKPIs(data) {
 }
 
 function updateLineChart(chart, history, valueKey) {
-  const labels = history.map((h) => formatTime(h.time));
-  const values = history.map((h) => h[valueKey]);
-  chart.data.labels = labels;
-  chart.data.datasets[0].data = values;
+  chart.data.labels = history.map((h) => formatTime(h.time));
+  chart.data.datasets[0].data = history.map((h) => h[valueKey]);
   chart.update('none');
 }
 
@@ -158,17 +206,17 @@ function updatePercentileChart(latency) {
 function updateEndpointsTable(endpoints) {
   const tbody = document.querySelector('#endpointsTable tbody');
   if (!endpoints.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhuma requisição ainda</td></tr>';
+    tbody.innerHTML = emptyTableRow(6, 'Nenhuma requisição ainda');
     return;
   }
   tbody.innerHTML = endpoints.map((e) => `
-    <tr>
-      <td><span class="method-badge method-${e.method}">${e.method}</span></td>
-      <td>${e.path}</td>
-      <td>${e.count.toLocaleString('pt-BR')}</td>
-      <td>${e.avgDuration}ms</td>
-      <td>${e.minDuration}ms / ${e.maxDuration}ms</td>
-      <td>${e.errorRate}%</td>
+    <tr class="pf-v6-c-table__tr" role="row">
+      <td class="pf-v6-c-table__td" role="cell" data-label="Método">${pfLabel(e.method, methodLabelClass(e.method))}</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Endpoint"><code class="pf-v6-c-code-block__code">${e.path}</code></td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Requisições">${e.count.toLocaleString('pt-BR')}</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Lat. média">${e.avgDuration}ms</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Min / Max">${e.minDuration}ms / ${e.maxDuration}ms</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Erros">${e.errorRate}%</td>
     </tr>
   `).join('');
 }
@@ -176,17 +224,17 @@ function updateEndpointsTable(endpoints) {
 function updateRecentTable(requests) {
   const tbody = document.querySelector('#recentTable tbody');
   if (!requests.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aguardando requisições...</td></tr>';
+    tbody.innerHTML = emptyTableRow(6, 'Aguardando requisições...');
     return;
   }
   tbody.innerHTML = requests.map((r) => `
-    <tr>
-      <td>${formatTime(new Date(r.timestamp).toISOString())}</td>
-      <td><span class="method-badge method-${r.method}">${r.method}</span></td>
-      <td>${r.path}</td>
-      <td><span class="status-code ${statusClass(r.statusCode)}">${r.statusCode}</span></td>
-      <td>${Math.round(r.durationMs)}ms</td>
-      <td>${r.ip || '-'}</td>
+    <tr class="pf-v6-c-table__tr" role="row">
+      <td class="pf-v6-c-table__td" role="cell" data-label="Hora">${formatTime(new Date(r.timestamp).toISOString())}</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Método">${pfLabel(r.method, methodLabelClass(r.method))}</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Endpoint"><code class="pf-v6-c-code-block__code">${r.path}</code></td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Status">${pfLabel(r.statusCode, statusLabelClass(r.statusCode))}</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="Latência">${Math.round(r.durationMs)}ms</td>
+      <td class="pf-v6-c-table__td" role="cell" data-label="IP">${r.ip || '-'}</td>
     </tr>
   `).join('');
 }
@@ -204,13 +252,15 @@ function updateDashboard(data) {
 
 function setConnectionStatus(status) {
   const el = document.getElementById('connectionStatus');
-  el.className = `status-badge ${status}`;
+  el.className = `pf-v6-c-label pf-m-outline ${
+    status === 'connected' ? 'pf-m-green' : status === 'disconnected' ? 'pf-m-red' : 'pf-m-orange'
+  } ${status}`;
   const labels = {
     connected: 'Ao vivo',
     disconnected: 'Desconectado',
     connecting: 'Conectando...',
   };
-  el.querySelector('span:last-child').textContent = labels[status];
+  el.querySelector('.pf-v6-c-label__text').textContent = labels[status];
 }
 
 function connectSSE() {
@@ -219,8 +269,7 @@ function connectSSE() {
 
   source.onmessage = (event) => {
     setConnectionStatus('connected');
-    const data = JSON.parse(event.data);
-    updateDashboard(data);
+    updateDashboard(JSON.parse(event.data));
   };
 
   source.onerror = () => {

@@ -10,9 +10,16 @@
   "engines": {
     "node": ">=18"
   },
-  "keywords": ["stress-test", "load-test", "api", "metrics", "dashboard"],
+  "keywords": [
+    "stress-test",
+    "load-test",
+    "api",
+    "metrics",
+    "dashboard"
+  ],
   "license": "MIT",
   "dependencies": {
+    "@patternfly/patternfly": "^6.6.0",
     "express": "^4.21.2"
   }
 }

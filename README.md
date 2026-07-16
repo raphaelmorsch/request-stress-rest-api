@@ -13,6 +13,8 @@ Acesse o dashboard em **[http://localhost:3000](http://localhost:3000)**
 
 ## Dashboard
 
+Interface construída com [PatternFly](https://www.patternfly.org/) 6 (Page, Masthead, Card, Table, Label, CodeBlock).
+
 O dashboard exibe em tempo real:
 
 - **RPS** (requisições por segundo)
@@ -103,7 +105,8 @@ ddosify -t http://localhost:3000/api/stress/random -n 200 -c 20 -d 1m
 ## Tecnologias
 
 - Node.js + Express
-- Chart.js (dashboard)
+- [PatternFly](https://www.patternfly.org/) 6 (UI)
+- Chart.js (gráficos)
 - Server-Sent Events (tempo real)
 
 

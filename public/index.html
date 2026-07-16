@@ -1,153 +1,319 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="pf-v6-theme-dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stress Test Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <title>Stress Test Dashboard | PatternFly</title>
+  <link rel="stylesheet" href="/patternfly/patternfly.min.css">
+  <link rel="stylesheet" href="/patternfly/patternfly-addons.css">
+  <link rel="stylesheet" href="/patternfly/patternfly-charts.css">
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <div class="header-left">
-        <div class="logo">
-          <span class="logo-icon">⚡</span>
-          <div>
-            <h1>Stress Test Dashboard</h1>
-            <p class="subtitle">Monitoramento de carga em tempo real</p>
+  <div class="pf-v6-c-page" id="page-default-nav">
+    <header class="pf-v6-c-masthead" id="page-default-nav-header">
+      <div class="pf-v6-c-masthead__main">
+        <a class="pf-v6-c-masthead__brand" href="/">
+          <div class="pf-v6-c-brand brand-text">
+            <span class="pf-v6-c-brand__logo brand-mark" aria-hidden="true">⚡</span>
+            <span class="brand-name">Stress Test API</span>
+          </div>
+        </a>
+      </div>
+      <div class="pf-v6-c-masthead__content">
+        <div class="pf-v6-c-toolbar">
+          <div class="pf-v6-c-toolbar__content">
+            <div class="pf-v6-c-toolbar__content-section">
+              <div class="pf-v6-c-toolbar__group pf-m-align-end pf-m-gap-md">
+                <div class="pf-v6-c-toolbar__item">
+                  <span class="pf-v6-c-label pf-m-outline pf-m-blue" id="connectionStatus">
+                    <span class="pf-v6-c-label__content">
+                      <span class="pf-v6-c-label__icon">
+                        <i class="fas fa-circle status-dot" aria-hidden="true"></i>
+                      </span>
+                      <span class="pf-v6-c-label__text">Conectando...</span>
+                    </span>
+                  </span>
+                </div>
+                <div class="pf-v6-c-toolbar__item">
+                  <button class="pf-v6-c-button pf-m-secondary" type="button" id="resetBtn">
+                    Resetar métricas
+                  </button>
+                </div>
+                <div class="pf-v6-c-toolbar__item">
+                  <a class="pf-v6-c-button pf-m-primary" href="/api/endpoints" target="_blank" rel="noopener noreferrer">
+                    Ver endpoints
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="header-right">
-        <div class="status-badge" id="connectionStatus">
-          <span class="status-dot"></span>
-          <span>Conectando...</span>
-        </div>
-        <button class="btn btn-secondary" id="resetBtn">Resetar Métricas</button>
-        <a href="/api/endpoints" class="btn btn-primary" target="_blank">Ver Endpoints</a>
-      </div>
     </header>
 
-    <section class="kpi-grid">
-      <div class="kpi-card">
-        <span class="kpi-label">RPS Atual</span>
-        <span class="kpi-value" id="kpiRps">0</span>
-        <span class="kpi-unit">req/s</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Total Requisições</span>
-        <span class="kpi-value" id="kpiTotal">0</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Conexões Ativas</span>
-        <span class="kpi-value" id="kpiConnections">0</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Taxa de Erro</span>
-        <span class="kpi-value error" id="kpiErrorRate">0%</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Latência Média</span>
-        <span class="kpi-value" id="kpiAvgLatency">0</span>
-        <span class="kpi-unit">ms</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Uptime</span>
-        <span class="kpi-value small" id="kpiUptime">0s</span>
-      </div>
-    </section>
+    <main class="pf-v6-c-page__main" tabindex="-1" id="main-content">
+      <div class="pf-v6-c-page__main-container">
+        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-c-content pf-v6-u-mb-md">
+              <h1 class="pf-v6-c-title pf-m-2xl">Dashboard de carga</h1>
+              <p class="pf-v6-u-text-color-subtle">Monitoramento de stress em tempo real com PatternFly</p>
+            </div>
+          </div>
+        </section>
 
-    <section class="charts-grid">
-      <div class="chart-card wide">
-        <h2>Requisições por Segundo</h2>
-        <canvas id="rpsChart"></canvas>
-      </div>
-      <div class="chart-card">
-        <h2>Latência (ms)</h2>
-        <canvas id="latencyChart"></canvas>
-      </div>
-      <div class="chart-card">
-        <h2>Erros por Segundo</h2>
-        <canvas id="errorChart"></canvas>
-      </div>
-      <div class="chart-card">
-        <h2>Distribuição de Status</h2>
-        <canvas id="statusChart"></canvas>
-      </div>
-      <div class="chart-card">
-        <h2>Percentis de Latência</h2>
-        <canvas id="percentileChart"></canvas>
-      </div>
-    </section>
+        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-l-gallery pf-m-gutter kpi-gallery">
+              <div class="pf-v6-c-card pf-m-compact">
+                <div class="pf-v6-c-card__header">
+                  <div class="pf-v6-c-card__title">
+                    <h2 class="pf-v6-c-card__title-text">RPS atual</h2>
+                  </div>
+                </div>
+                <div class="pf-v6-c-card__body">
+                  <span class="kpi-value" id="kpiRps">0</span>
+                  <span class="pf-v6-u-text-color-subtle">req/s</span>
+                </div>
+              </div>
+              <div class="pf-v6-c-card pf-m-compact">
+                <div class="pf-v6-c-card__header">
+                  <div class="pf-v6-c-card__title">
+                    <h2 class="pf-v6-c-card__title-text">Total de requisições</h2>
+                  </div>
+                </div>
+                <div class="pf-v6-c-card__body">
+                  <span class="kpi-value" id="kpiTotal">0</span>
+                </div>
+              </div>
+              <div class="pf-v6-c-card pf-m-compact">
+                <div class="pf-v6-c-card__header">
+                  <div class="pf-v6-c-card__title">
+                    <h2 class="pf-v6-c-card__title-text">Conexões ativas</h2>
+                  </div>
+                </div>
+                <div class="pf-v6-c-card__body">
+                  <span class="kpi-value" id="kpiConnections">0</span>
+                </div>
+              </div>
+              <div class="pf-v6-c-card pf-m-compact">
+                <div class="pf-v6-c-card__header">
+                  <div class="pf-v6-c-card__title">
+                    <h2 class="pf-v6-c-card__title-text">Taxa de erro</h2>
+                  </div>
+                </div>
+                <div class="pf-v6-c-card__body">
+                  <span class="kpi-value pf-v6-u-text-color-status-danger" id="kpiErrorRate">0%</span>
+                </div>
+              </div>
+              <div class="pf-v6-c-card pf-m-compact">
+                <div class="pf-v6-c-card__header">
+                  <div class="pf-v6-c-card__title">
+                    <h2 class="pf-v6-c-card__title-text">Latência média</h2>
+                  </div>
+                </div>
+                <div class="pf-v6-c-card__body">
+                  <span class="kpi-value" id="kpiAvgLatency">0</span>
+                  <span class="pf-v6-u-text-color-subtle">ms</span>
+                </div>
+              </div>
+              <div class="pf-v6-c-card pf-m-compact">
+                <div class="pf-v6-c-card__header">
+                  <div class="pf-v6-c-card__title">
+                    <h2 class="pf-v6-c-card__title-text">Uptime</h2>
+                  </div>
+                </div>
+                <div class="pf-v6-c-card__body">
+                  <span class="kpi-value kpi-value-sm" id="kpiUptime">0s</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    <section class="tables-grid">
-      <div class="table-card">
-        <h2>Endpoints Mais Requisitados</h2>
-        <div class="table-wrapper">
-          <table id="endpointsTable">
-            <thead>
-              <tr>
-                <th>Método</th>
-                <th>Endpoint</th>
-                <th>Requisições</th>
-                <th>Lat. Média</th>
-                <th>Min / Max</th>
-                <th>Erros</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="table-card">
-        <h2>Requisições Recentes</h2>
-        <div class="table-wrapper">
-          <table id="recentTable">
-            <thead>
-              <tr>
-                <th>Hora</th>
-                <th>Método</th>
-                <th>Endpoint</th>
-                <th>Status</th>
-                <th>Latência</th>
-                <th>IP</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-l-grid pf-m-gutter">
+              <div class="pf-v6-l-grid__item pf-m-12-col">
+                <div class="pf-v6-c-card">
+                  <div class="pf-v6-c-card__header">
+                    <div class="pf-v6-c-card__title">
+                      <h2 class="pf-v6-c-card__title-text">Requisições por segundo</h2>
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-card__body">
+                    <div class="chart-container chart-container-lg">
+                      <canvas id="rpsChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-lg">
+                <div class="pf-v6-c-card">
+                  <div class="pf-v6-c-card__header">
+                    <div class="pf-v6-c-card__title">
+                      <h2 class="pf-v6-c-card__title-text">Latência (ms)</h2>
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-card__body">
+                    <div class="chart-container">
+                      <canvas id="latencyChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-lg">
+                <div class="pf-v6-c-card">
+                  <div class="pf-v6-c-card__header">
+                    <div class="pf-v6-c-card__title">
+                      <h2 class="pf-v6-c-card__title-text">Erros por segundo</h2>
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-card__body">
+                    <div class="chart-container">
+                      <canvas id="errorChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-lg">
+                <div class="pf-v6-c-card">
+                  <div class="pf-v6-c-card__header">
+                    <div class="pf-v6-c-card__title">
+                      <h2 class="pf-v6-c-card__title-text">Distribuição de status</h2>
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-card__body">
+                    <div class="chart-container">
+                      <canvas id="statusChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-lg">
+                <div class="pf-v6-c-card">
+                  <div class="pf-v6-c-card__header">
+                    <div class="pf-v6-c-card__title">
+                      <h2 class="pf-v6-c-card__title-text">Percentis de latência</h2>
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-card__body">
+                    <div class="chart-container">
+                      <canvas id="percentileChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    <section class="examples-card">
-      <h2>Exemplos de Teste de Carga</h2>
-      <div class="examples-grid">
-        <div class="example-block">
-          <h3>curl</h3>
-          <pre><code>curl http://localhost:3000/api/stress/fast
+        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-l-grid pf-m-gutter">
+              <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-xl">
+                <div class="pf-v6-c-card">
+                  <div class="pf-v6-c-card__header">
+                    <div class="pf-v6-c-card__title">
+                      <h2 class="pf-v6-c-card__title-text">Endpoints mais requisitados</h2>
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-card__body pf-v6-u-p-0">
+                    <div class="pf-v6-c-scroll-inner-wrapper">
+                      <table class="pf-v6-c-table pf-m-compact pf-m-grid-md" id="endpointsTable" role="grid">
+                        <thead class="pf-v6-c-table__thead">
+                          <tr class="pf-v6-c-table__tr" role="row">
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Método</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Endpoint</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Requisições</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Lat. média</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Min / Max</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Erros</th>
+                          </tr>
+                        </thead>
+                        <tbody class="pf-v6-c-table__tbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-xl">
+                <div class="pf-v6-c-card">
+                  <div class="pf-v6-c-card__header">
+                    <div class="pf-v6-c-card__title">
+                      <h2 class="pf-v6-c-card__title-text">Requisições recentes</h2>
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-card__body pf-v6-u-p-0">
+                    <div class="pf-v6-c-scroll-inner-wrapper">
+                      <table class="pf-v6-c-table pf-m-compact pf-m-grid-md" id="recentTable" role="grid">
+                        <thead class="pf-v6-c-table__thead">
+                          <tr class="pf-v6-c-table__tr" role="row">
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Hora</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Método</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Endpoint</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Status</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">Latência</th>
+                            <th class="pf-v6-c-table__th" role="columnheader" scope="col">IP</th>
+                          </tr>
+                        </thead>
+                        <tbody class="pf-v6-c-table__tbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="pf-v6-c-page__main-section pf-m-limit-width">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-c-card">
+              <div class="pf-v6-c-card__header">
+                <div class="pf-v6-c-card__title">
+                  <h2 class="pf-v6-c-card__title-text">Exemplos de teste de carga</h2>
+                </div>
+              </div>
+              <div class="pf-v6-c-card__body">
+                <div class="pf-v6-l-grid pf-m-gutter">
+                  <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-md">
+                    <h3 class="pf-v6-c-title pf-m-md pf-v6-u-mb-sm">curl</h3>
+                    <div class="pf-v6-c-code-block">
+                      <div class="pf-v6-c-code-block__content">
+                        <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">curl http://localhost:3000/api/stress/fast
 
 curl "http://localhost:3000/api/stress/slow?delay=1000"
 
 for i in $(seq 1 100); do
-  curl -s http://localhost:3000/api/stress/fast &
+  curl -s http://localhost:3000/api/stress/fast &amp;
 done</code></pre>
-        </div>
-        <div class="example-block">
-          <h3>ddosify</h3>
-          <pre><code>ddosify -t http://localhost:3000/api/stress/fast -n 100 -c 10
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pf-v6-l-grid__item pf-m-12-col pf-m-6-col-on-md">
+                    <h3 class="pf-v6-c-title pf-m-md pf-v6-u-mb-sm">ddosify</h3>
+                    <div class="pf-v6-c-code-block">
+                      <div class="pf-v6-c-code-block__content">
+                        <pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">ddosify -t http://localhost:3000/api/stress/fast -n 100 -c 10
 
 ddosify -t http://localhost:3000/api/stress/slow?delay=200 \
   -n 50 -c 5 -d 30s
 
 ddosify -t http://localhost:3000/api/stress/random \
   -n 200 -c 20 -d 1m</code></pre>
-        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </main>
   </div>
 
   <script src="/js/dashboard.js"></script>
