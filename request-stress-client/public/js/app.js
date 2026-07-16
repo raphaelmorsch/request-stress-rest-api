@@ -213,9 +213,10 @@ async function init() {
   const meta = await fetch('/api/endpoints').then((r) => r.json());
   endpoints = meta.endpoints;
   document.querySelector('#backendStatus .pf-v6-c-label__text').textContent = `Backend: ${meta.backendUrl}`;
-  document.getElementById('backendDashboardLink').href = meta.backendUrl;
+  document.getElementById('backendDashboardLink').href = meta.backendUrlExternal || meta.backendUrl;
   renderEndpointCards();
-  log(`Cliente pronto. Backend alvo: ${meta.backendUrl}`);
+  log(`Cliente pronto. Backend (carga): ${meta.backendUrl}`);
+  log(`Dashboard externo: ${meta.backendUrlExternal || meta.backendUrl}`);
 
   document.getElementById('endpointCards').addEventListener('click', async (event) => {
     const btn = event.target.closest('[data-action]');

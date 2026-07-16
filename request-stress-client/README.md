@@ -35,10 +35,13 @@ Abra **http://localhost:4000**
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
 | `PORT` | `4000` | Porta do cliente |
-| `BACKEND_URL` | `http://localhost:3000` | URL do request-stress-backend |
+| `BACKEND_URL` | `http://localhost:3000` | URL interna do backend (Service OpenShift) usada na carga via `/api/call` |
+| `BACKEND_URL_EXTERNAL` | mesmo que `BACKEND_URL` | URL pública/rota do backend para o botão "Abrir dashboard backend" |
 
 ```bash
-BACKEND_URL=http://localhost:3001 PORT=4000 npm start
+BACKEND_URL=http://request-stress.mercantil-http-scaling.svc:3000 \
+BACKEND_URL_EXTERNAL=https://request-stress.apps.exemplo.com \
+PORT=4000 npm start
 ```
 
 ## API do cliente
