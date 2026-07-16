@@ -1,15 +1,39 @@
 # Request Stress REST API
 
-API REST para testes de carga e stress com dashboard de métricas em tempo real.
+Monorepo com **request-stress-backend** (API + dashboard de métricas) e **request-stress-client** (gerador de carga via proxy).
+
+```
+request-stress-client (:4000)
+        │
+        ▼
+   GET /api/call
+        │
+        ▼
+   HTTP
+        │
+        ▼
+request-stress-backend (:3000)
+        │
+        ▼
+   resposta + métricas no dashboard
+```
 
 ## Início Rápido
 
 ```bash
+# Backend (app atual)
 npm install
 npm start
+
+# Cliente (outro terminal)
+npm --prefix request-stress-client install
+npm run start:client
 ```
 
-Acesse o dashboard em **[http://localhost:3000](http://localhost:3000)**
+- Backend / Dashboard: **http://localhost:3000**
+- Cliente de carga: **http://localhost:4000**
+
+Detalhes do cliente: [request-stress-client/README.md](./request-stress-client/README.md)
 
 ## Dashboard
 

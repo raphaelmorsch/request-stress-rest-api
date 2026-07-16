@@ -5,7 +5,11 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "start:backend": "node src/server.js",
+    "start:client": "npm --prefix request-stress-client start",
+    "dev:client": "npm --prefix request-stress-client run dev",
+    "install:all": "npm install && npm --prefix request-stress-client install"
   },
   "engines": {
     "node": ">=18"

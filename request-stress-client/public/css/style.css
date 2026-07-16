@@ -1,0 +1,90 @@
+.pf-v6-c-masthead__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--md);
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 2.25rem;
+  max-width: 9.5rem;
+}
+
+.brand-name {
+  font-family: var(--pf-t--global--font--family--heading);
+  font-size: var(--pf-t--global--font--size--heading--sm);
+  font-weight: var(--pf-t--global--font--weight--heading--bold);
+  color: var(--pf-t--global--text--color--regular);
+  white-space: nowrap;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar {
+  display: flex !important;
+  flex-direction: column;
+  grid-template-areas: none !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar > .pf-v6-c-masthead {
+  grid-area: unset !important;
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar > .pf-v6-c-page__main-container {
+  grid-area: unset !important;
+  flex: 1 1 auto;
+  align-self: stretch !important;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  margin-inline-start: var(--pf-t--global--spacer--lg);
+  margin-inline-end: var(--pf-t--global--spacer--lg);
+}
+
+.pf-v6-c-page.pf-m-no-sidebar .pf-v6-c-masthead__content {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.pf-v6-c-page.pf-m-no-sidebar .pf-v6-c-toolbar__content-section {
+  justify-content: flex-end;
+}
+
+#endpointCards {
+  --pf-v6-l-gallery--GridTemplateColumns--min: 320px;
+}
+
+.endpoint-card .pf-v6-c-form__group {
+  margin-block-end: var(--pf-t--global--spacer--sm);
+}
+
+.endpoint-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pf-t--global--spacer--sm);
+  margin-block-start: var(--pf-t--global--spacer--md);
+}
+
+.log-pre {
+  max-height: 240px;
+  overflow: auto;
+}
+
+.pf-v6-c-scroll-inner-wrapper {
+  overflow-x: auto;
+}
+
+.endpoint-path {
+  font-family: var(--pf-t--global--font--family--mono);
+  font-size: var(--pf-t--global--font--size--sm);
+  word-break: break-all;
+}

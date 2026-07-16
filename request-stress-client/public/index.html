@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="pf-v6-theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Stress Client</title>
+  <link rel="stylesheet" href="/patternfly/patternfly.min.css">
+  <link rel="stylesheet" href="/patternfly/patternfly-addons.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="pf-v6-c-page pf-m-no-sidebar" id="page">
+    <header class="pf-v6-c-masthead">
+      <div class="pf-v6-c-masthead__main">
+        <a class="pf-v6-c-masthead__brand" href="/">
+          <img class="pf-v6-c-brand brand-logo" src="/img/redhat-logo-on-dark.svg" alt="Red Hat" width="151" height="36">
+          <span class="brand-name">Request Stress Client</span>
+        </a>
+      </div>
+      <div class="pf-v6-c-masthead__content">
+        <div class="pf-v6-c-toolbar">
+          <div class="pf-v6-c-toolbar__content">
+            <div class="pf-v6-c-toolbar__content-section">
+              <div class="pf-v6-c-toolbar__group pf-m-align-end pf-m-gap-md">
+                <div class="pf-v6-c-toolbar__item">
+                  <span class="pf-v6-c-label pf-m-outline pf-m-blue" id="backendStatus">
+                    <span class="pf-v6-c-label__content">
+                      <span class="pf-v6-c-label__text">Backend: …</span>
+                    </span>
+                  </span>
+                </div>
+                <div class="pf-v6-c-toolbar__item">
+                  <a class="pf-v6-c-button pf-m-secondary" href="http://localhost:3000" target="_blank" rel="noopener noreferrer">
+                    Abrir dashboard backend
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="pf-v6-c-page__main-container" tabindex="-1" id="main-content">
+      <main class="pf-v6-c-page__main">
+        <section class="pf-v6-c-page__main-section">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-c-content pf-v6-u-mb-md">
+              <h1 class="pf-v6-c-title pf-m-2xl">Gerador de carga</h1>
+              <p class="pf-v6-u-text-color-subtle">
+                UI → <code>GET /api/call</code> → HTTP → <strong>request-stress-backend</strong>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="pf-v6-c-page__main-section">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-c-card pf-v6-u-mb-md">
+              <div class="pf-v6-c-card__header">
+                <div class="pf-v6-c-card__title">
+                  <h2 class="pf-v6-c-card__title-text">Configuração global</h2>
+                </div>
+              </div>
+              <div class="pf-v6-c-card__body">
+                <form class="pf-v6-c-form pf-m-horizontal" id="globalForm" onsubmit="return false;">
+                  <div class="pf-v6-c-form__group">
+                    <div class="pf-v6-c-form__group-label">
+                      <label class="pf-v6-c-form__label" for="globalRequests">
+                        <span class="pf-v6-c-form__label-text">Requisições</span>
+                      </label>
+                    </div>
+                    <div class="pf-v6-c-form__group-control">
+                      <input class="pf-v6-c-form-control" type="number" id="globalRequests" min="1" max="5000" value="50">
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-form__group">
+                    <div class="pf-v6-c-form__group-label">
+                      <label class="pf-v6-c-form__label" for="globalConcurrency">
+                        <span class="pf-v6-c-form__label-text">Concorrência</span>
+                      </label>
+                    </div>
+                    <div class="pf-v6-c-form__group-control">
+                      <input class="pf-v6-c-form-control" type="number" id="globalConcurrency" min="1" max="200" value="10">
+                    </div>
+                  </div>
+                  <div class="pf-v6-c-form__group pf-m-action">
+                    <div class="pf-v6-c-form__actions">
+                      <button class="pf-v6-c-button pf-m-primary" type="button" id="runAllBtn">
+                        Disparar carga em todos
+                      </button>
+                      <button class="pf-v6-c-button pf-m-secondary" type="button" id="stopBtn" disabled>
+                        Parar
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="pf-v6-l-gallery pf-m-gutter" id="endpointCards"></div>
+          </div>
+        </section>
+
+        <section class="pf-v6-c-page__main-section">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-c-card">
+              <div class="pf-v6-c-card__header">
+                <div class="pf-v6-c-card__title">
+                  <h2 class="pf-v6-c-card__title-text">Resultados</h2>
+                </div>
+              </div>
+              <div class="pf-v6-c-card__body pf-v6-u-p-0">
+                <div class="pf-v6-c-scroll-inner-wrapper">
+                  <table class="pf-v6-c-table pf-m-compact pf-m-grid-md" id="resultsTable" role="grid">
+                    <thead class="pf-v6-c-table__thead">
+                      <tr class="pf-v6-c-table__tr" role="row">
+                        <th class="pf-v6-c-table__th" scope="col">Endpoint</th>
+                        <th class="pf-v6-c-table__th" scope="col">Req</th>
+                        <th class="pf-v6-c-table__th" scope="col">OK</th>
+                        <th class="pf-v6-c-table__th" scope="col">Falhas</th>
+                        <th class="pf-v6-c-table__th" scope="col">RPS</th>
+                        <th class="pf-v6-c-table__th" scope="col">Lat. média</th>
+                        <th class="pf-v6-c-table__th" scope="col">P95</th>
+                        <th class="pf-v6-c-table__th" scope="col">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody class="pf-v6-c-table__tbody" id="resultsBody">
+                      <tr class="pf-v6-c-table__tr">
+                        <td class="pf-v6-c-table__td" colspan="8">
+                          <div class="pf-v6-c-empty-state pf-m-xs">
+                            <div class="pf-v6-c-empty-state__content">
+                              <div class="pf-v6-c-empty-state__body">Nenhuma carga executada ainda</div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="pf-v6-c-page__main-section">
+          <div class="pf-v6-c-page__main-body">
+            <div class="pf-v6-c-card">
+              <div class="pf-v6-c-card__header">
+                <div class="pf-v6-c-card__title">
+                  <h2 class="pf-v6-c-card__title-text">Log ao vivo</h2>
+                </div>
+              </div>
+              <div class="pf-v6-c-card__body">
+                <div class="pf-v6-c-code-block">
+                  <div class="pf-v6-c-code-block__content">
+                    <pre class="pf-v6-c-code-block__pre log-pre"><code class="pf-v6-c-code-block__code" id="liveLog">Aguardando…</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
