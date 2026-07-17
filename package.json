@@ -9,7 +9,9 @@
     "start:backend": "node src/server.js",
     "start:client": "npm --prefix request-stress-client start",
     "dev:client": "npm --prefix request-stress-client run dev",
-    "install:all": "npm install && npm --prefix request-stress-client install"
+    "start:fallback": "npm --prefix request-stress-fallback start",
+    "dev:fallback": "npm --prefix request-stress-fallback run dev",
+    "install:all": "npm install && npm --prefix request-stress-client install && npm --prefix request-stress-fallback install"
   },
   "engines": {
     "node": ">=18"

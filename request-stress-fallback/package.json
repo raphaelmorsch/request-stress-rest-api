@@ -1,0 +1,17 @@
+{
+  "name": "request-stress-fallback",
+  "version": "1.0.0",
+  "description": "Serviço de fallback que responde HTTP 200 com payload de degradação do backend",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

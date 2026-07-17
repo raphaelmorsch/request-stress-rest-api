@@ -1,6 +1,6 @@
 # Request Stress REST API
 
-Monorepo com **request-stress-backend** (API + dashboard de métricas) e **request-stress-client** (gerador de carga via proxy).
+Monorepo com **request-stress-backend** (API + dashboard), **request-stress-client** (gerador de carga) e **request-stress-fallback** (resposta degradada).
 
 ```
 request-stress-client (:4000)
@@ -11,11 +11,11 @@ request-stress-client (:4000)
         ▼
    HTTP
         │
-        ▼
-request-stress-backend (:3000)
+        ├──────────────────► request-stress-backend (:3000)
+        │                         resposta + métricas
         │
-        ▼
-   resposta + métricas no dashboard
+        └──────────────────► request-stress-fallback (:5001)
+                              HTTP 200 + status: degraded
 ```
 
 ## Início Rápido
@@ -28,12 +28,18 @@ npm start
 # Cliente (outro terminal)
 npm --prefix request-stress-client install
 npm run start:client
+
+# Fallback (outro terminal)
+npm --prefix request-stress-fallback install
+npm run start:fallback
 ```
 
 - Backend / Dashboard: **http://localhost:3000**
 - Cliente de carga: **http://localhost:4000**
+- Fallback: **http://localhost:5001**
 
-Detalhes do cliente: [request-stress-client/README.md](./request-stress-client/README.md)
+Detalhes do cliente: [request-stress-client/README.md](./request-stress-client/README.md)  
+Detalhes do fallback: [request-stress-fallback/README.md](./request-stress-fallback/README.md)
 
 ## Dashboard
 
