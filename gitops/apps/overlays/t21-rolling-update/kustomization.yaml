@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# T21 — rolling update sob carga: bump de versão (v1 → v2) mantendo maxUnavailable: 0
+resources:
+  - ../../base
+
+images:
+  - name: image-registry.openshift-image-registry.svc:5000/mercantil-mesh/request-stress
+    newTag: v2
+
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: request-stress
+    patch: |-
+      - op: replace
+        path: /metadata/labels/version
+        value: v2
+      - op: replace
+        path: /spec/template/metadata/labels/version
+        value: v2
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: v2

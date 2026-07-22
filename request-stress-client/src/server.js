@@ -9,9 +9,13 @@ const PORT = process.env.PORT || 4000;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const BACKEND_URL_EXTERNAL =
   process.env.BACKEND_URL_EXTERNAL || process.env.BACKEND_URL || 'http://localhost:3000';
+const FALLBACK_URL = process.env.FALLBACK_URL || 'http://localhost:5001';
+const FALLBACK_ENABLED = String(process.env.FALLBACK_ENABLED || 'true').toLowerCase() !== 'false';
 
 app.set('backendUrl', BACKEND_URL.replace(/\/$/, ''));
 app.set('backendUrlExternal', BACKEND_URL_EXTERNAL.replace(/\/$/, ''));
+app.set('fallbackUrl', FALLBACK_URL.replace(/\/$/, ''));
+app.set('fallbackEnabled', FALLBACK_ENABLED);
 app.set('trust proxy', true);
 app.use(express.json({ limit: '1mb' }));
 
@@ -21,6 +25,8 @@ app.get('/api/health', (_req, res) => {
     client: 'request-stress-client',
     backendUrl: app.get('backendUrl'),
     backendUrlExternal: app.get('backendUrlExternal'),
+    fallbackUrl: app.get('fallbackUrl'),
+    fallbackEnabled: app.get('fallbackEnabled'),
     timestamp: new Date().toISOString(),
   });
 });
@@ -30,7 +36,9 @@ app.get('/api/endpoints', (_req, res) => {
     client: 'request-stress-client',
     backendUrl: app.get('backendUrl'),
     backendUrlExternal: app.get('backendUrlExternal'),
-    flow: 'UI → GET /api/call → HTTP → request-stress-backend',
+    fallbackUrl: app.get('fallbackUrl'),
+    fallbackEnabled: app.get('fallbackEnabled'),
+    flow: 'UI → GET /api/call → HTTP → backend (fallback se indisponível)',
     endpoints: BACKEND_ENDPOINTS,
     callExample: '/api/call?path=/api/stress/fast',
   });
@@ -53,5 +61,6 @@ app.listen(PORT, () => {
   console.log(`🎯 request-stress-client em http://localhost:${PORT}`);
   console.log(`➡️  Backend (carga): ${app.get('backendUrl')}`);
   console.log(`🌐 Backend (externo/dashboard): ${app.get('backendUrlExternal')}`);
+  console.log(`🛟 Fallback: ${app.get('fallbackUrl')} (enabled=${app.get('fallbackEnabled')})`);
   console.log(`📞 Proxy: GET http://localhost:${PORT}/api/call?path=/api/stress/fast`);
 });

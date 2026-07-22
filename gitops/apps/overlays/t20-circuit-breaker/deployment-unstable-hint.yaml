@@ -1,0 +1,27 @@
+# Overlay T20 — backend instável (error rate alto) para evidenciar retries + circuit breaker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  annotations:
+    mercantil.io/test-case: T20
+    mercantil.io/scenario: unstable-dependency
+spec:
+  template:
+    metadata:
+      annotations:
+        mercantil.io/error-rate: "80"
+    spec:
+      containers:
+        - name: request-stress
+          env:
+            - name: PORT
+              value: "3000"
+            - name: APP_VERSION
+              value: v1
+            # Consumido pelo endpoint /api/stress/error quando o teste gerar carga nele.
+            # Para forçar 5xx em health durante o teste, use o VS de abort (T19) ou
+            # gere carga em /api/stress/error?rate=80 via client.
+            - name: DEFAULT_ERROR_RATE
+              value: "80"

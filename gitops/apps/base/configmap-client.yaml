@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: request-stress-client-config
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress-client
+    app.kubernetes.io/part-of: request-stress-poc
+  annotations:
+    # T09: endpoint centralizado — alterar só este ConfigMap (via GitOps)
+    mercantil.io/test-case: T09
+data:
+  BACKEND_URL: http://request-stress.mercantil-mesh.svc.cluster.local:3000
+  BACKEND_URL_EXTERNAL: http://request-stress.mercantil-mesh.svc.cluster.local:3000
+  FALLBACK_URL: http://request-stress-fallback.mercantil-mesh.svc.cluster.local:5001
+  FALLBACK_ENABLED: "true"

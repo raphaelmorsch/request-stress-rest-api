@@ -1,0 +1,18 @@
+FROM registry.access.redhat.com/ubi9/nodejs-20:latest
+
+USER 0
+WORKDIR /opt/app-root/src
+
+COPY request-stress-client/package.json request-stress-client/package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY request-stress-client/src ./src
+COPY request-stress-client/public ./public
+
+RUN chown -R 1001:0 /opt/app-root/src
+USER 1001
+
+ENV PORT=4000
+EXPOSE 4000
+
+CMD ["node", "src/server.js"]

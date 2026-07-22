@@ -37,6 +37,8 @@ Abra **http://localhost:4000**
 | `PORT` | `4000` | Porta do cliente |
 | `BACKEND_URL` | `http://localhost:3000` | URL interna do backend (Service OpenShift) usada na carga via `/api/call` |
 | `BACKEND_URL_EXTERNAL` | mesmo que `BACKEND_URL` | URL pública/rota do backend para o botão "Abrir dashboard backend" |
+| `FALLBACK_URL` | `http://localhost:5001` | URL do serviço de fallback (T19) |
+| `FALLBACK_ENABLED` | `true` | Se `true`, em falha/5xx do backend o client responde de forma degradada via fallback |
 
 ```bash
 BACKEND_URL=http://request-stress.mercantil-http-scaling.svc:3000 \

@@ -96,8 +96,19 @@ router.get('/random', (_req, res) => {
 });
 
 router.get('/health', (_req, res) => {
+  // T22: versão quebrada falha readiness/liveness quando HEALTH_FAIL=true
+  if (String(process.env.HEALTH_FAIL || '').toLowerCase() === 'true') {
+    return res.status(503).json({
+      status: 'unhealthy',
+      version: process.env.APP_VERSION || 'unknown',
+      message: 'HEALTH_FAIL=true (release intencionalmente quebrada)',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   res.json({
     status: 'healthy',
+    version: process.env.APP_VERSION || 'v1',
     uptime: process.uptime(),
     memory: process.memoryUsage(),
     timestamp: new Date().toISOString(),

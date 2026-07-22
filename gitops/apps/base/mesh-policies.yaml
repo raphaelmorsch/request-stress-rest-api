@@ -1,0 +1,79 @@
+# T20 — retries + circuit breaker (outlierDetection) no backend dependente
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+    app.kubernetes.io/part-of: request-stress-poc
+  annotations:
+    mercantil.io/test-case: T20
+spec:
+  host: request-stress.mercantil-mesh.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 10
+        http2MaxRequests: 20
+        maxRequestsPerConnection: 2
+      tcp:
+        maxConnections: 20
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100
+      minHealthPercent: 0
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: request-stress-fallback
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress-fallback
+  annotations:
+    mercantil.io/test-case: T20
+spec:
+  host: request-stress-fallback.mercantil-mesh.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 20
+---
+# Baseline: retries (T20). Overlays T19/T18 substituem o bloco http.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+    app.kubernetes.io/part-of: request-stress-poc
+  annotations:
+    mercantil.io/test-cases: T19,T20
+spec:
+  hosts:
+    - request-stress.mercantil-mesh.svc.cluster.local
+  http:
+    - name: primary
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: 5xx,reset,connect-failure,refused-stream
+      timeout: 8s
+      route:
+        - destination:
+            host: request-stress.mercantil-mesh.svc.cluster.local
+            subset: v1
+            port:
+              number: 3000
+          weight: 100

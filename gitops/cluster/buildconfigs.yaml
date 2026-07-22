@@ -1,0 +1,80 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: request-stress-client
+  namespace: mercantil-mesh
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: request-stress-fallback
+  namespace: mercantil-mesh
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: request-stress:v1
+  source:
+    type: Git
+    git:
+      uri: https://github.com/raphaelmorsch/request-stress-rest-api.git
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile.backend
+  triggers: []
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: request-stress-client
+  namespace: mercantil-mesh
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: request-stress-client:v1
+  source:
+    type: Git
+    git:
+      uri: https://github.com/raphaelmorsch/request-stress-rest-api.git
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile.client
+  triggers: []
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: request-stress-fallback
+  namespace: mercantil-mesh
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: request-stress-fallback:v1
+  source:
+    type: Git
+    git:
+      uri: https://github.com/raphaelmorsch/request-stress-rest-api.git
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile.fallback
+  triggers: []

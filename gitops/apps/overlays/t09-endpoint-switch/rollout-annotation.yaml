@@ -1,0 +1,11 @@
+# T09 — força rollout do client após troca do ConfigMap
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: request-stress-client
+  namespace: mercantil-mesh
+spec:
+  template:
+    metadata:
+      annotations:
+        mercantil.io/config-version: t09-endpoint-switch

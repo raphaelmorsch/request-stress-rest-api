@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Ambiente "prod" da PoC — baseline estável sincronizado pelo Argo CD
+resources:
+  - ../../base
+
+images:
+  - name: image-registry.openshift-image-registry.svc:5000/mercantil-mesh/request-stress
+    newTag: v1
+  - name: image-registry.openshift-image-registry.svc:5000/mercantil-mesh/request-stress-client
+    newTag: v1
+  - name: image-registry.openshift-image-registry.svc:5000/mercantil-mesh/request-stress-fallback
+    newTag: v1

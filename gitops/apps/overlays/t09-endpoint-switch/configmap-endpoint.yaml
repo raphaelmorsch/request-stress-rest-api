@@ -1,0 +1,15 @@
+# T09 — troca centralizada do endpoint (ConfigMap only)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: request-stress-client-config
+  namespace: mercantil-mesh
+  annotations:
+    mercantil.io/test-case: T09
+    mercantil.io/scenario: endpoint-switch-to-fallback
+data:
+  # Aponta o "backend" para o fallback sem alterar código dos microsserviços
+  BACKEND_URL: http://request-stress-fallback.mercantil-mesh.svc.cluster.local:5001
+  BACKEND_URL_EXTERNAL: http://request-stress-fallback.mercantil-mesh.svc.cluster.local:5001
+  FALLBACK_URL: http://request-stress-fallback.mercantil-mesh.svc.cluster.local:5001
+  FALLBACK_ENABLED: "true"

@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mercantil-mesh
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: request-stress-poc
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: false
+
+resources:
+  - configmap-client.yaml
+  - backend.yaml
+  - fallback.yaml
+  - client.yaml
+  - mesh-policies.yaml

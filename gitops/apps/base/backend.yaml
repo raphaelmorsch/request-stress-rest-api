@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+    version: v1
+    app.kubernetes.io/part-of: request-stress-poc
+  annotations:
+    mercantil.io/test-cases: T21,T22
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: request-stress
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: request-stress
+        version: v1
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      containers:
+        - name: request-stress
+          image: image-registry.openshift-image-registry.svc:5000/mercantil-mesh/request-stress:v1
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: APP_VERSION
+              value: v1
+          readinessProbe:
+            httpGet:
+              path: /api/stress/health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/stress/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+    app.kubernetes.io/part-of: request-stress-poc
+spec:
+  selector:
+    app: request-stress
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+spec:
+  to:
+    kind: Service
+    name: request-stress
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    istio-injection: disabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mercantil-mesh
+  labels:
+    istio-injection: enabled
+    app.kubernetes.io/part-of: request-stress-poc

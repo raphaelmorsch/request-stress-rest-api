@@ -50,36 +50,123 @@ router.all('/', async (req, res) => {
 
   const targetUrl = buildTargetUrl(backendUrl, path, forwardQuery);
   const started = process.hrtime.bigint();
+  const fallbackEnabled = Boolean(req.app.get('fallbackEnabled'));
+  const fallbackUrl = req.app.get('fallbackUrl');
 
-  try {
-    const headers = { Accept: 'application/json' };
-    const init = { method, headers };
+  const headers = { Accept: 'application/json' };
+  const init = { method, headers };
 
-    if (body !== undefined && method !== 'GET' && method !== 'HEAD') {
-      headers['Content-Type'] = 'application/json';
-      init.body = JSON.stringify(body);
-    }
+  if (body !== undefined && method !== 'GET' && method !== 'HEAD') {
+    headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(body);
+  }
 
-    const upstream = await fetch(targetUrl, init);
-    const elapsedMs = Number(process.hrtime.bigint() - started) / 1_000_000;
+  async function callUpstream(url) {
+    const upstream = await fetch(url, init);
     const contentType = upstream.headers.get('content-type') || '';
     const payload = contentType.includes('application/json')
       ? await upstream.json()
       : await upstream.text();
+    return { upstream, payload };
+  }
 
-    res.status(upstream.status).json({
-      status: upstream.ok ? 'ok' : 'error',
-      client: 'request-stress-client',
-      backend: {
-        url: targetUrl.toString(),
-        method,
-        statusCode: upstream.status,
-        durationMs: Math.round(elapsedMs * 100) / 100,
-      },
-      data: payload,
-    });
+  try {
+    const { upstream, payload } = await callUpstream(targetUrl);
+    const elapsedMs = Number(process.hrtime.bigint() - started) / 1_000_000;
+
+    if (upstream.ok || !fallbackEnabled || !fallbackUrl) {
+      return res.status(upstream.status).json({
+        status: upstream.ok ? 'ok' : 'error',
+        client: 'request-stress-client',
+        source: 'backend',
+        backend: {
+          url: targetUrl.toString(),
+          method,
+          statusCode: upstream.status,
+          durationMs: Math.round(elapsedMs * 100) / 100,
+        },
+        data: payload,
+      });
+    }
+
+    // T19: backend indisponível / 5xx → resposta degradada via fallback
+    const fallbackTarget = buildTargetUrl(fallbackUrl, path, forwardQuery);
+    try {
+      const fb = await callUpstream(fallbackTarget);
+      const totalMs = Number(process.hrtime.bigint() - started) / 1_000_000;
+      return res.status(200).json({
+        status: 'degraded',
+        client: 'request-stress-client',
+        source: 'fallback',
+        message: 'Backend indisponível; resposta degradada via fallback',
+        backend: {
+          url: targetUrl.toString(),
+          method,
+          statusCode: upstream.status,
+          durationMs: Math.round(elapsedMs * 100) / 100,
+        },
+        fallback: {
+          url: fallbackTarget.toString(),
+          statusCode: fb.upstream.status,
+          durationMs: Math.round(totalMs * 100) / 100,
+        },
+        data: fb.payload,
+      });
+    } catch (fallbackError) {
+      return res.status(502).json({
+        status: 'error',
+        message: 'Backend e fallback indisponíveis',
+        client: 'request-stress-client',
+        backend: {
+          url: targetUrl.toString(),
+          method,
+          statusCode: upstream.status,
+          durationMs: Math.round(elapsedMs * 100) / 100,
+        },
+        error: fallbackError.message,
+      });
+    }
   } catch (error) {
     const elapsedMs = Number(process.hrtime.bigint() - started) / 1_000_000;
+
+    if (fallbackEnabled && fallbackUrl) {
+      const fallbackTarget = buildTargetUrl(fallbackUrl, path, forwardQuery);
+      try {
+        const fb = await callUpstream(fallbackTarget);
+        const totalMs = Number(process.hrtime.bigint() - started) / 1_000_000;
+        return res.status(200).json({
+          status: 'degraded',
+          client: 'request-stress-client',
+          source: 'fallback',
+          message: 'Falha de rede no backend; resposta degradada via fallback',
+          backend: {
+            url: targetUrl.toString(),
+            method,
+            durationMs: Math.round(elapsedMs * 100) / 100,
+            error: error.message,
+          },
+          fallback: {
+            url: fallbackTarget.toString(),
+            statusCode: fb.upstream.status,
+            durationMs: Math.round(totalMs * 100) / 100,
+          },
+          data: fb.payload,
+        });
+      } catch (fallbackError) {
+        return res.status(502).json({
+          status: 'error',
+          message: 'Falha ao chamar backend e fallback',
+          client: 'request-stress-client',
+          backend: {
+            url: targetUrl.toString(),
+            method,
+            durationMs: Math.round(elapsedMs * 100) / 100,
+          },
+          error: `${error.message}; fallback: ${fallbackError.message}`,
+        });
+      }
+    }
+
     res.status(502).json({
       status: 'error',
       message: 'Falha ao chamar o backend',

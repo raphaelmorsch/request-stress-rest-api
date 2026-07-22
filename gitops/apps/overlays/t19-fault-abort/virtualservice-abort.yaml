@@ -1,0 +1,25 @@
+# T19 — overlay: abort 100% no backend (simula API dependente indisponível)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  annotations:
+    mercantil.io/test-case: T19
+    mercantil.io/scenario: dependent-api-unavailable
+spec:
+  hosts:
+    - request-stress.mercantil-mesh.svc.cluster.local
+  http:
+    - name: fault-abort
+      fault:
+        abort:
+          percentage:
+            value: 100
+          httpStatus: 503
+      route:
+        - destination:
+            host: request-stress.mercantil-mesh.svc.cluster.local
+            subset: v1
+            port:
+              number: 3000

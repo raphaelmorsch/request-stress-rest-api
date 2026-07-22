@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Baseline já contém DestinationRule (outlierDetection) + VirtualService (retries).
+# Este overlay só marca o cenário; a evidência vem da carga em /api/stress/error.
+resources:
+  - ../../base
+
+patches:
+  - path: deployment-unstable-hint.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: request-stress

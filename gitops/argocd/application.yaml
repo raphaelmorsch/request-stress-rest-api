@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: request-stress-poc
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: request-stress-poc
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/raphaelmorsch/request-stress-rest-api.git
+    targetRevision: main
+    path: gitops/apps/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mercantil-mesh
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    - group: route.openshift.io
+      kind: Route
+      jsonPointers:
+        - /status
+        - /spec/host
