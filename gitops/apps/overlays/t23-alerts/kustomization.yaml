@@ -7,3 +7,4 @@ resources:
   - ../../base
   - servicemonitor.yaml
   - prometheusrule.yaml
+  - networkpolicy-uwm-scrape.yaml

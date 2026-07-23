@@ -1,0 +1,25 @@
+# T23 — permite scrape do Prometheus User Workload no backend (mesh NetworkPolicy bloqueia UWM)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-uwm-scrape-request-stress
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+    app.kubernetes.io/part-of: request-stress-poc
+  annotations:
+    mercantil.io/test-case: T23
+spec:
+  podSelector:
+    matchLabels:
+      app: request-stress
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - protocol: TCP
+          port: 3000
