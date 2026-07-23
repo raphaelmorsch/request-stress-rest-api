@@ -71,9 +71,10 @@ spec:
         retryOn: 5xx,reset,connect-failure,refused-stream
       timeout: 8s
       route:
+        # Sem subset: durante rolling update (T21) Pods v1 e v2 recebem tráfego.
+        # Subsets do DestinationRule continuam disponíveis para canary futuro.
         - destination:
             host: request-stress.mercantil-mesh.svc.cluster.local
-            subset: v1
             port:
               number: 3000
           weight: 100
