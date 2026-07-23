@@ -23,7 +23,7 @@ oc get pods,svc,route,vs,dr -n mercantil-mesh
 Rotas (após sync):
 
 ```bash
-CLIENT_URL=$(oc get route request-stress-client -n mercantil-mesh -o jsonpath='https://{.spec.host}')
+CLIENT_URL=$(oc get route request-stress-client -n mercantil-mesh -o jsonpath='http://{.spec.host}')
 BACKEND_URL=$(oc get route request-stress -n mercantil-mesh -o jsonpath='https://{.spec.host}')
 echo "$CLIENT_URL" "$BACKEND_URL"
 ```
@@ -71,7 +71,7 @@ oc start-build request-stress -n mercantil-mesh --from-dir=. --follow \
 
 ```bash
 # Baseline
-curl -sk "$CLIENT_URL/api/health" | jq .
+curl -s "$CLIENT_URL/api/health" | jq .
 
 # Aplicar overlay T09 (ou apontar o Argo path para overlays/t09-endpoint-switch)
 oc apply -k gitops/apps/overlays/t09-endpoint-switch
@@ -80,8 +80,8 @@ oc apply -k gitops/apps/overlays/t09-endpoint-switch
 oc rollout status deploy/request-stress-client -n mercantil-mesh
 
 # Evidência: BACKEND_URL agora aponta para o fallback
-curl -sk "$CLIENT_URL/api/health" | jq '{backendUrl,fallbackUrl}'
-curl -sk "$CLIENT_URL/api/call?path=/api/stress/fast" | jq '{status,source,data}'
+curl -s "$CLIENT_URL/api/health" | jq '{backendUrl,fallbackUrl}'
+curl -s "$CLIENT_URL/api/call?path=/api/stress/fast" | jq '{status,source,data}'
 
 # Restaurar baseline
 oc apply -k gitops/apps/overlays/prod
@@ -100,7 +100,7 @@ oc apply -k gitops/apps/overlays/prod
 oc apply -k gitops/apps/overlays/t19-fault-abort
 
 # Chamada via client → deve retornar status=degraded / source=fallback
-curl -sk "$CLIENT_URL/api/call?path=/api/stress/fast" | jq .
+curl -s "$CLIENT_URL/api/call?path=/api/stress/fast" | jq .
 
 # Kiali: Topology mercantil-mesh — aresta client → backend com erros 503
 # oc get route -n istio-system | grep kiali
@@ -124,7 +124,7 @@ oc get destinationrule request-stress -n mercantil-mesh -o yaml | grep -A20 outl
 
 # Gerar erros 5xx no backend para observar retries + ejeção
 for i in $(seq 1 50); do
-  curl -sk "$CLIENT_URL/api/call?path=/api/stress/error&rate=90" -o /dev/null &
+  curl -s "$CLIENT_URL/api/call?path=/api/stress/error&rate=90" -o /dev/null &
 done
 wait
 
@@ -143,7 +143,7 @@ oc logs -n mercantil-mesh -l app=request-stress-client -c istio-proxy --tail=50
 ```bash
 # Terminal 1 — carga contínua
 while true; do
-  code=$(curl -sk -o /dev/null -w '%{http_code}' "$CLIENT_URL/api/call?path=/api/stress/fast")
+  code=$(curl -s -o /dev/null -w '%{http_code}' "$CLIENT_URL/api/call?path=/api/stress/fast")
   echo "$(date +%H:%M:%S) $code"
   sleep 0.2
 done

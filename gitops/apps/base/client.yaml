@@ -33,10 +33,10 @@ spec:
           imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 4000
+              containerPort: 8080
           env:
             - name: PORT
-              value: "4000"
+              value: "8080"
             - name: BACKEND_URL
               valueFrom:
                 configMapKeyRef:
@@ -90,7 +90,7 @@ spec:
     app: request-stress-client
   ports:
     - name: http
-      port: 4000
+      port: 8080
       targetPort: http
 ---
 apiVersion: route.openshift.io/v1
@@ -106,7 +106,4 @@ spec:
     name: request-stress-client
   port:
     targetPort: http
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
   wildcardPolicy: None

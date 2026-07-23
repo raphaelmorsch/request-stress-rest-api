@@ -12,7 +12,7 @@ COPY request-stress-client/public ./public
 RUN chown -R 1001:0 /opt/app-root/src
 USER 1001
 
-ENV PORT=4000
-EXPOSE 4000
+ENV PORT=8080
+EXPOSE 8080
 
 CMD ["node", "src/server.js"]

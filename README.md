@@ -3,7 +3,7 @@
 Monorepo com **request-stress-backend** (API + dashboard), **request-stress-client** (gerador de carga) e **request-stress-fallback** (resposta degradada).
 
 ```
-request-stress-client (:4000)
+request-stress-client (:8080)
         │
         ▼
    GET /api/call
@@ -35,7 +35,7 @@ npm run start:fallback
 ```
 
 - Backend / Dashboard: **http://localhost:3000**
-- Cliente de carga: **http://localhost:4000**
+- Cliente de carga: **http://localhost:8080**
 - Fallback: **http://localhost:5001**
 
 Detalhes do cliente: [request-stress-client/README.md](./request-stress-client/README.md)  
@@ -1051,7 +1051,7 @@ Usuário / curl / browser
 Route (edge TLS)
         │
         ▼
-request-stress-client  (:4000)  ←── ConfigMap (BACKEND_URL / FALLBACK_URL)  [T09]
+request-stress-client  (:8080)  ←── ConfigMap (BACKEND_URL / FALLBACK_URL)  [T09]
         │
         │  HTTP interno (mesh)
         ▼
@@ -1074,7 +1074,7 @@ Microsserviços:
 | Componente | Função | Porta |
 |------------|--------|-------|
 | `request-stress` | API + dashboard de métricas (backend) | 3000 |
-| `request-stress-client` | Proxy `/api/call` + gerador de carga | 4000 |
+| `request-stress-client` | Proxy `/api/call` + gerador de carga | 8080 |
 | `request-stress-fallback` | Resposta degradada quando o backend falha | 5001 |
 
 ### Pré-requisitos na console
@@ -1212,7 +1212,7 @@ oc apply -k gitops/apps/overlays/prod
 Exemplo neste cluster:
 
 ```text
-https://request-stress-client-mercantil-mesh.apps.cluster-j9ll5.dyn.redhatworkshops.io
+http://request-stress-client-mercantil-mesh.apps.cluster-j9ll5.dyn.redhatworkshops.io
 https://request-stress-mercantil-mesh.apps.cluster-j9ll5.dyn.redhatworkshops.io
 ```
 
@@ -1376,7 +1376,7 @@ Confirme no VS que o bloco `fault` sumiu e que `/api/call?path=/api/stress/fast`
 4. Gere carga com erros no backend pela Route do client (várias abas ou um Terminal na console):
 
 ```bash
-CLIENT_URL=$(oc get route request-stress-client -n mercantil-mesh -o jsonpath='https://{.spec.host}')
+CLIENT_URL=$(oc get route request-stress-client -n mercantil-mesh -o jsonpath='http://{.spec.host}')
 for i in $(seq 1 50); do
   curl -sk "$CLIENT_URL/api/call?path=/api/stress/error&rate=90" -o /dev/null &
 done
@@ -1413,7 +1413,7 @@ Overlay auxiliar (apenas marca o cenário): `gitops/apps/overlays/t20-circuit-br
 2. No Terminal:
 
 ```bash
-CLIENT_URL=$(oc get route request-stress-client -n mercantil-mesh -o jsonpath='https://{.spec.host}')
+CLIENT_URL=$(oc get route request-stress-client -n mercantil-mesh -o jsonpath='http://{.spec.host}')
 while true; do
   code=$(curl -sk -o /dev/null -w '%{http_code}' "$CLIENT_URL/api/call?path=/api/stress/fast")
   echo "$(date +%H:%M:%S) $code"

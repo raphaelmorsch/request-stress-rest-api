@@ -28,13 +28,13 @@ npm install
 npm start
 ```
 
-Abra **http://localhost:4000**
+Abra **http://localhost:8080**
 
 ## Variáveis de ambiente
 
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
-| `PORT` | `4000` | Porta do cliente |
+| `PORT` | `8080` | Porta do cliente |
 | `BACKEND_URL` | `http://localhost:3000` | URL interna do backend (Service OpenShift) usada na carga via `/api/call` |
 | `BACKEND_URL_EXTERNAL` | mesmo que `BACKEND_URL` | URL pública/rota do backend para o botão "Abrir dashboard backend" |
 | `FALLBACK_URL` | `http://localhost:5001` | URL do serviço de fallback (T19) |
@@ -43,7 +43,7 @@ Abra **http://localhost:4000**
 ```bash
 BACKEND_URL=http://request-stress.mercantil-http-scaling.svc:3000 \
 BACKEND_URL_EXTERNAL=https://request-stress.apps.exemplo.com \
-PORT=4000 npm start
+PORT=8080 npm start
 ```
 
 ## API do cliente
@@ -59,13 +59,13 @@ PORT=4000 npm start
 
 ```bash
 # Probe via proxy
-curl "http://localhost:4000/api/call?path=/api/stress/fast"
+curl "http://localhost:8080/api/call?path=/api/stress/fast"
 
 # Slow com query
-curl "http://localhost:4000/api/call?path=/api/stress/slow&delay=200"
+curl "http://localhost:8080/api/call?path=/api/stress/slow&delay=200"
 
 # POST echo via /api/call
-curl "http://localhost:4000/api/call?path=/api/stress/echo&method=POST&body=%7B%22hello%22%3Atrue%7D"
+curl "http://localhost:8080/api/call?path=/api/stress/echo&method=POST&body=%7B%22hello%22%3Atrue%7D"
 ```
 
 ## UI

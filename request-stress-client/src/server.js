@@ -5,7 +5,7 @@ const callRoutes = require('./routes/call');
 const loadRoutes = require('./routes/load');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const BACKEND_URL_EXTERNAL =
   process.env.BACKEND_URL_EXTERNAL || process.env.BACKEND_URL || 'http://localhost:3000';
