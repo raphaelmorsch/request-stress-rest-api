@@ -1,4 +1,4 @@
-# Caderno de execução — T09, T19, T20, T21, T22, T23, T24
+# Caderno de execução — T09, T19, T20, T21, T22, T23, T24, T25
 # PoC OpenShift Application Platform (Mercantil)
 
 Namespace da aplicação: `mercantil-mesh`  
@@ -243,7 +243,7 @@ oc apply -k gitops/apps/overlays/prod
 
 ## T24 — Observabilidade: identificação de gargalos
 
-**Objetivo:** simular latência de dependência (e opcionalmente CPU) e identificar o componente afetado com métricas/eventos (sem tracing — T25/T26).
+**Objetivo:** simular latência de dependência (e opcionalmente CPU) e identificar o componente afetado com métricas/eventos.
 
 ```bash
 # Baseline saudável
@@ -283,6 +283,52 @@ curl -sk -o /dev/null -w 'restored %{time_total}s\n' "$CLIENT_URL/api/call?path=
 
 ---
 
+## T25 — Canary deployment (Service Mesh)
+
+**Objetivo:** publicar v2 em paralelo e direcionar uma fração do tráfego (90% stable / 10% canary) via `VirtualService`, sem rolling update do Deployment estável.
+
+**Pré-req:** tag `request-stress:v2` (bootstrap / T21).
+
+```bash
+# Garantir imagem v2
+oc get istag request-stress:v2 -n mercantil-mesh || \
+  oc tag mercantil-mesh/request-stress:v1 mercantil-mesh/request-stress:v2
+
+# Aplicar canary (Deployment+Service+DR request-stress-v2 + VS com pesos)
+oc apply -k gitops/apps/overlays/t25-canary
+oc rollout status deploy/request-stress-v2 -n mercantil-mesh
+
+# Conferir recursos
+oc get deploy,svc,dr,vs -n mercantil-mesh | grep request-stress
+oc get virtualservice request-stress -n mercantil-mesh -o yaml | grep -A30 'canary-weighted'
+
+# Amostra de versões via client (tráfego mesh → VS → split)
+for i in $(seq 1 100); do
+  curl -s "$CLIENT_URL/api/call?path=/api/stress/health" \
+    | jq -r '.data.version // empty'
+done | sort | uniq -c
+
+# Canary forçado por header (a partir do client no mesh)
+oc exec deploy/request-stress-client -c request-stress-client -n mercantil-mesh -- \
+  node -e '
+fetch("http://request-stress.mercantil-mesh.svc.cluster.local:3000/api/stress/health", {
+  headers: { "x-canary": "true" }
+}).then(r => r.json()).then(j => console.log(JSON.stringify({ status: j.status, version: j.version })))
+'
+
+# Kiali: Graph do namespace — arestas para request-stress e request-stress-v2 (~10%)
+
+# Restaurar baseline (oc apply não remove o Deployment v2 — apague explicitamente)
+oc delete deploy/request-stress-v2 svc/request-stress-v2 dr/request-stress-v2 -n mercantil-mesh --ignore-not-found
+oc apply -k gitops/apps/overlays/prod
+```
+
+Com Argo CD (`prune: true`), apontar o path de volta para `overlays/prod` remove os recursos só do canary.
+
+**Evidências:** contagem ~90× `v1` / ~10× `v2`, YAML do VS com pesos, graph Kiali com split, header `x-canary: true` sempre em v2.
+
+---
+
 ## Mapa de artefatos
 
 | Caso | Artefato principal |
@@ -294,6 +340,7 @@ curl -sk -o /dev/null -w 'restored %{time_total}s\n' "$CLIENT_URL/api/call?path=
 | T22 | `overlays/t22-broken-release` + restore `overlays/prod` |
 | T23 | `overlays/t23-alerts` (ServiceMonitor + PrometheusRule) + `/metrics` |
 | T24 | `overlays/t24-latency-delay` (VS `fault.delay`) |
+| T25 | `overlays/t25-canary` (VS pesos + `request-stress-v2`) |
 | GitOps | `argocd/application.yaml` |
 | Mesh | `cluster/servicemesh-controlplane.yaml` |
 | UWM | `cluster-monitoring-config` (`enableUserWorkload: true`) |

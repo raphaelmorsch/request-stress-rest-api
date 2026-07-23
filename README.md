@@ -1028,7 +1028,7 @@ Número de Pods diminui
 
 
 
-## GitOps + OpenShift Service Mesh (casos T09, T19, T20, T21 e T22)
+## GitOps + OpenShift Service Mesh (casos T09, T19–T22, T25)
 
 Esta seção documenta o cenário montado para o caderno de testes da PoC Mercantil, cobrindo:
 
@@ -1039,6 +1039,7 @@ Esta seção documenta o cenário montado para o caderno de testes da PoC Mercan
 | **T20** | Circuit breaker e retries | `DestinationRule` (outlierDetection) + `VirtualService` (retries) |
 | **T21** | Atualização sem interrupção sob carga | Rolling update com `maxUnavailable: 0` |
 | **T22** | Rollback em caso de falha | Deploy quebrado + retorno ao estado desejado (GitOps) |
+| **T25** | Canary deployment | `VirtualService` com pesos (90/10) + workload `request-stress-v2` |
 
 Os manifests estão em `gitops/`. O runbook operacional (CLI) está em [`gitops/TEST-RUNBOOK.md`](./gitops/TEST-RUNBOOK.md). Abaixo, o passo a passo **reproduzível pela OpenShift Web Console**.
 
@@ -1060,6 +1061,7 @@ request-stress (backend :3000)
         ├── VirtualService (retries)           [T20]
         ├── DestinationRule (circuit breaker)  [T20]
         ├── Fault injection abort 503          [T19]
+        ├── Canary weights 90/10 → v2          [T25]
         │
         └── em falha → request-stress-fallback (:5001)  [T19]
                          resposta HTTP 200 status=degraded
@@ -1496,6 +1498,43 @@ oc apply -k gitops/apps/overlays/prod
 
 ---
 
+### T25 — Canary deployment (Service Mesh)
+
+**Objetivo:** expor a versão `v2` em paralelo e enviar só uma fração do tráfego (padrão **90% stable / 10% canary**) pelo Service Mesh, sem substituir o Deployment estável (diferente do T21).
+
+**Artefato:** `gitops/apps/overlays/t25-canary`  
+(Deployment + Service + DestinationRule `request-stress-v2` + VirtualService com pesos e match `x-canary: true`)
+
+#### Passo a passo (CLI)
+
+1. Garantir a tag de imagem `request-stress:v2` (mesmo procedimento do T21).
+2. Aplicar o overlay:
+
+```bash
+oc apply -k gitops/apps/overlays/t25-canary
+oc rollout status deploy/request-stress-v2 -n mercantil-mesh
+```
+
+3. Amostrar versões via client (~90× `v1` / ~10× `v2`):
+
+```bash
+for i in $(seq 1 100); do
+  curl -s "$CLIENT_URL/api/call?path=/api/stress/health" | jq -r '.data.version'
+done | sort | uniq -c
+```
+
+4. No **Kiali**, conferir o graph com tráfego também para `request-stress-v2`.
+5. Restaurar: apagar os recursos do canary e reaplicar `overlays/prod` (ver runbook).
+
+#### Evidências
+
+- Contagem de `version` na amostra de 100 requests.
+- YAML do VirtualService (`weight: 90` / `weight: 10`).
+- Graph Kiali com split de tráfego.
+- Header `x-canary: true` forçando 100% v2 a partir de um Pod no mesh.
+
+---
+
 ### Mapa rápido de artefatos × casos de teste
 
 | Caso | Overlay / manifesto | Onde ver na console |
@@ -1507,6 +1546,7 @@ oc apply -k gitops/apps/overlays/prod
 | T20 | `gitops/apps/base/mesh-policies.yaml` | VirtualService (retries) + DestinationRule (outlierDetection) + Kiali |
 | T21 | `gitops/apps/overlays/t21-rolling-update` | Deployment Pods durante carga |
 | T22 | `gitops/apps/overlays/t22-broken-release` | Pods com falha + restore `prod` / Argo Sync |
+| T25 | `gitops/apps/overlays/t25-canary` | Deploy `request-stress-v2` + VS pesos + Kiali |
 | GitOps | `gitops/argocd/application.yaml` | Argo CD UI → Application `request-stress-poc` |
 
 ### Checklist de evidências da PoC (Web Console)
@@ -1520,4 +1560,5 @@ oc apply -k gitops/apps/overlays/prod
 - [ ] **T20:** YAML retries/outlierDetection + métricas Kiali sob `/api/stress/error`
 - [ ] **T21:** rolling update sob carga com codes 200 predominantes
 - [ ] **T22:** falha visível + restore saudável (console e/ou Argo CD)
+- [ ] **T25:** amostra ~90/10 de `version` + graph Kiali com `request-stress-v2`
 
