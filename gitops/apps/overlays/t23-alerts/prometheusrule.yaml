@@ -1,0 +1,60 @@
+# T23 — alertas avaliados pelo thanos-ruler (User Workload Monitoring)
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: request-stress-alerts
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+    app.kubernetes.io/part-of: request-stress-poc
+  annotations:
+    mercantil.io/test-case: T23
+spec:
+  groups:
+    - name: request-stress.t23
+      rules:
+        - alert: RequestStressHighErrorRate
+          expr: |
+            (
+              sum(rate(http_requests_errors_total{namespace="mercantil-mesh",service="request-stress"}[2m]))
+              /
+              clamp_min(sum(rate(http_requests_total{namespace="mercantil-mesh",service="request-stress"}[2m])), 0.001)
+            ) > 0.2
+          for: 1m
+          labels:
+            severity: warning
+            test_case: T23
+          annotations:
+            summary: "Taxa de erro elevada em request-stress"
+            description: >-
+              Mais de 20% das requisições do backend request-stress (namespace mercantil-mesh)
+              estão falhando (status >= 400) nos últimos 2 minutos.
+            runbook: "Gerar carga com /api/stress/error?rate=90 via client; investigar Pods e Kiali."
+
+        - alert: RequestStressHighLatency
+          expr: |
+            avg(http_request_duration_ms_avg{namespace="mercantil-mesh",service="request-stress"}) > 1000
+          for: 1m
+          labels:
+            severity: warning
+            test_case: T23
+          annotations:
+            summary: "Latência média elevada em request-stress"
+            description: >-
+              Latência média do backend request-stress acima de 1000ms por mais de 1 minuto.
+              Pode indicar CPU bound, /api/stress/slow ou fault.delay no VirtualService (T24).
+            runbook: "Observe → Metrics + Kiali topology; correlacionar com VS e carga."
+
+        - alert: RequestStressHighMemory
+          expr: |
+            max(process_resident_memory_bytes{namespace="mercantil-mesh",service="request-stress"}) > 180000000
+          for: 2m
+          labels:
+            severity: warning
+            test_case: T23
+          annotations:
+            summary: "Uso de memória elevado em request-stress"
+            description: >-
+              RSS do processo Node.js acima de ~180MB. Investigar Pod/container request-stress
+              e carga em /api/stress/large.
+            runbook: "Observe → Metrics (memória) + oc adm top pod -n mercantil-mesh."

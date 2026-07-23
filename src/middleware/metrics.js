@@ -1,7 +1,10 @@
 const metrics = require('../metrics/collector');
 
 function metricsMiddleware(req, res, next) {
-  if (req.path.startsWith('/api/metrics/stream')) return next();
+  // Não contabilizar scrapes Prometheus nem o stream SSE
+  if (req.path === '/metrics' || req.path.startsWith('/api/metrics/stream')) {
+    return next();
+  }
 
   const start = process.hrtime.bigint();
   metrics.connectionOpened();

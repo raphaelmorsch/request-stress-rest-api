@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const metrics = require('./metrics/collector');
 const metricsMiddleware = require('./middleware/metrics');
 const stressRoutes = require('./routes/stress');
 const metricsRoutes = require('./routes/metrics');
@@ -10,6 +11,12 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', true);
 app.use(express.json({ limit: '1mb' }));
 app.use(metricsMiddleware);
+
+// Endpoint canônico para ServiceMonitor (OpenShift User Workload Monitoring)
+app.get('/metrics', (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  res.send(metrics.toPrometheus());
+});
 
 app.use('/api/stress', stressRoutes);
 app.use('/api/metrics', metricsRoutes);
@@ -28,6 +35,7 @@ app.get('/api/endpoints', (_req, res) => {
       { method: 'GET', path: '/api/stress/random', description: 'Comportamento aleatório' },
       { method: 'GET', path: '/api/stress/health', description: 'Health check' },
       { method: 'GET', path: '/api/metrics/snapshot', description: 'Snapshot das métricas' },
+      { method: 'GET', path: '/metrics', description: 'Métricas Prometheus (ServiceMonitor)' },
     ],
     examples: {
       curl: [

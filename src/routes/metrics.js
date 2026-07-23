@@ -7,6 +7,11 @@ router.get('/snapshot', (_req, res) => {
   res.json(metrics.getSnapshot());
 });
 
+router.get('/prometheus', (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  res.send(metrics.toPrometheus());
+});
+
 router.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');

@@ -1,0 +1,26 @@
+# T24 — overlay: delay 100% no backend (simula latência de dependência / gargalo)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  annotations:
+    mercantil.io/test-case: T24
+    mercantil.io/scenario: dependency-latency-bottleneck
+spec:
+  hosts:
+    - request-stress.mercantil-mesh.svc.cluster.local
+  http:
+    - name: fault-delay
+      # Sem retries agressivos: evidência de latência fica clara no client/Kiali
+      timeout: 10s
+      fault:
+        delay:
+          percentage:
+            value: 100
+          fixedDelay: 2s
+      route:
+        - destination:
+            host: request-stress.mercantil-mesh.svc.cluster.local
+            port:
+              number: 3000

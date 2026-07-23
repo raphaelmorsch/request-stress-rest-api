@@ -196,6 +196,64 @@ class MetricsCollector {
     this.errorHistory = [];
     this.recentRequests = [];
   }
+
+  /** Exposition format for Prometheus / OpenShift User Workload Monitoring. */
+  toPrometheus(extraLabels = {}) {
+    const now = Date.now();
+    this._pruneBuckets(now);
+
+    const labels = (extra = {}) => {
+      const all = { ...extraLabels, ...extra };
+      const entries = Object.entries(all);
+      if (!entries.length) return '';
+      return `{${entries.map(([k, v]) => `${k}="${v}"`).join(',')}}`;
+    };
+
+    const out = [];
+
+    out.push('# HELP http_requests_total Total HTTP requests handled by the app');
+    out.push('# TYPE http_requests_total counter');
+    if (this.statusCodes.size === 0) {
+      out.push(`http_requests_total${labels({ code: '0' })} 0`);
+    } else {
+      for (const [code, count] of this.statusCodes.entries()) {
+        out.push(`http_requests_total${labels({ code })} ${count}`);
+      }
+    }
+
+    out.push('# HELP http_requests_errors_total Total HTTP requests with status >= 400');
+    out.push('# TYPE http_requests_errors_total counter');
+    out.push(`http_requests_errors_total${labels()} ${this.totalErrors}`);
+
+    const durations = this.latencyBuckets.map((b) => b.durationMs);
+    const avgLatency =
+      durations.length > 0
+        ? durations.reduce((s, d) => s + d, 0) / durations.length
+        : 0;
+
+    out.push('# HELP http_request_duration_ms_avg Average request duration over the last 60s (ms)');
+    out.push('# TYPE http_request_duration_ms_avg gauge');
+    out.push(`http_request_duration_ms_avg${labels()} ${avgLatency.toFixed(3)}`);
+
+    const mem = process.memoryUsage();
+    out.push('# HELP process_resident_memory_bytes Resident memory size in bytes');
+    out.push('# TYPE process_resident_memory_bytes gauge');
+    out.push(`process_resident_memory_bytes${labels()} ${mem.rss}`);
+
+    out.push('# HELP process_heap_bytes Node.js heap used in bytes');
+    out.push('# TYPE process_heap_bytes gauge');
+    out.push(`process_heap_bytes${labels()} ${mem.heapUsed}`);
+
+    out.push('# HELP app_active_connections Current in-flight HTTP requests');
+    out.push('# TYPE app_active_connections gauge');
+    out.push(`app_active_connections${labels()} ${this.activeConnections}`);
+
+    out.push('# HELP app_uptime_seconds Process uptime in seconds');
+    out.push('# TYPE app_uptime_seconds gauge');
+    out.push(`app_uptime_seconds${labels()} ${((now - this.startTime) / 1000).toFixed(0)}`);
+
+    return `${out.join('\n')}\n`;
+  }
 }
 
 module.exports = new MetricsCollector();

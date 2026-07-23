@@ -1,0 +1,24 @@
+# T23 — scrape das métricas do backend pelo User Workload Monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: request-stress
+  namespace: mercantil-mesh
+  labels:
+    app: request-stress
+    app.kubernetes.io/part-of: request-stress-poc
+  annotations:
+    mercantil.io/test-case: T23
+spec:
+  selector:
+    matchLabels:
+      app: request-stress
+  namespaceSelector:
+    matchNames:
+      - mercantil-mesh
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      scheme: http

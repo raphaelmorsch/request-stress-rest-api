@@ -1,9 +1,10 @@
-# Caderno de execução — T09, T19, T20, T21, T22
+# Caderno de execução — T09, T19, T20, T21, T22, T23, T24
 # PoC OpenShift Application Platform (Mercantil)
 
 Namespace da aplicação: `mercantil-mesh`  
 Control plane mesh: `istio-system`  
-GitOps: Application `request-stress-poc` (OpenShift GitOps / Argo CD)
+GitOps: Application `request-stress-poc` (OpenShift GitOps / Argo CD)  
+User Workload Monitoring: `openshift-user-workload-monitoring` (`enableUserWorkload: true`)
 
 ## Pré-requisitos
 
@@ -14,6 +15,10 @@ oc get csv -n openshift-operators | grep -E 'servicemeshoperator|kiali'
 # Control plane Ready
 oc get smcp basic -n istio-system
 oc get pods -n istio-system
+
+# User Workload Monitoring (T23/T24)
+oc get cm cluster-monitoring-config -n openshift-monitoring -o yaml | grep -A2 enableUserWorkload
+oc get pods -n openshift-user-workload-monitoring
 
 # App sincronizada
 oc get application request-stress-poc -n openshift-gitops
@@ -195,6 +200,89 @@ argocd app sync request-stress-poc
 
 ---
 
+## T23 — Observabilidade: métricas e alertas
+
+**Objetivo:** gerar degradação controlada e validar que métricas são coletadas e o alerta dispara (console / Alertmanager).
+
+**Pré-req:** imagem do backend com endpoint `/metrics` (rebuild se necessário) + User Workload Monitoring ativo.
+
+```bash
+# Garantir /metrics na imagem em execução
+curl -sk "$BACKEND_URL/metrics" | head
+
+# Aplicar ServiceMonitor + PrometheusRule
+oc apply -k gitops/apps/overlays/t23-alerts
+
+# Conferir scrape e regras
+oc get servicemonitor,prometheusrule -n mercantil-mesh
+oc logs -n openshift-user-workload-monitoring -l app.kubernetes.io/name=prometheus-user-workload --tail=30
+
+# Gerar degradação (error rate alto) por ~2–3 minutos
+for i in $(seq 1 300); do
+  curl -sk "$CLIENT_URL/api/call?path=/api/stress/error&rate=90" -o /dev/null &
+  sleep 0.3
+done
+wait
+
+# Validar alerta (Observe → Alerting na console, ou CLI)
+oc get prometheusrule request-stress-alerts -n mercantil-mesh -o yaml | grep -A5 RequestStressHighErrorRate
+# Console: Observe → Alerting — filtro namespace=mercantil-mesh / RequestStressHighErrorRate = Firing
+
+# Query rápida (Prometheus UWM / Developer Metrics)
+# http_requests_errors_total / http_requests_total  e  http_request_duration_ms_avg
+
+# Restaurar baseline (apply em prod não apaga SM/PR — remover explicitamente)
+oc delete servicemonitor request-stress -n mercantil-mesh --ignore-not-found
+oc delete prometheusrule request-stress-alerts -n mercantil-mesh --ignore-not-found
+oc apply -k gitops/apps/overlays/prod
+```
+
+**Evidências:** YAML do ServiceMonitor/PrometheusRule, dashboard/query com métricas, alerta `RequestStressHighErrorRate` (ou HighLatency) em estado Firing, eventos correlacionados.
+
+---
+
+## T24 — Observabilidade: identificação de gargalos
+
+**Objetivo:** simular latência de dependência (e opcionalmente CPU) e identificar o componente afetado com métricas/eventos (sem tracing — T25/T26).
+
+```bash
+# Baseline saudável
+curl -sk -o /dev/null -w 'baseline %{time_total}s\n' "$CLIENT_URL/api/call?path=/api/stress/fast"
+
+# --- Cenário A: latência de dependência (mesh fault.delay) ---
+oc apply -k gitops/apps/overlays/t24-latency-delay
+oc get virtualservice request-stress -n mercantil-mesh -o yaml | grep -A10 fault
+
+# Latência ~2s+ no caminho client → backend
+curl -sk -o /dev/null -w 'delayed %{time_total}s\n' "$CLIENT_URL/api/call?path=/api/stress/fast"
+for i in $(seq 1 30); do
+  curl -sk "$CLIENT_URL/api/call?path=/api/stress/fast" -o /dev/null &
+done
+wait
+
+# Diagnóstico esperado:
+# - Kiali: aresta client → request-stress com latência alta
+# - Observe → Metrics: http_request_duration_ms_avg (se T23/SM ativo) ou métricas de Pod
+# - oc get events -n mercantil-mesh --sort-by=.lastTimestamp | tail
+# Conclusão: gargalo = dependência request-stress (delay no VirtualService), ns mercantil-mesh
+
+# --- Cenário B (opcional): CPU no backend ---
+# for i in $(seq 1 40); do
+#   curl -sk "$CLIENT_URL/api/call?path=/api/stress/cpu&iterations=500000" -o /dev/null &
+# done
+# wait
+# oc adm top pod -n mercantil-mesh
+# Conclusão: Pod request-stress-* com CPU elevado
+
+# Restaurar
+oc apply -k gitops/apps/overlays/prod
+curl -sk -o /dev/null -w 'restored %{time_total}s\n' "$CLIENT_URL/api/call?path=/api/stress/fast"
+```
+
+**Evidências:** gráficos (latência/CPU), events/logs, conclusão nomeando workload/namespace/Pod ou dependência (ex.: VS `fault.delay` em `request-stress`).
+
+---
+
 ## Mapa de artefatos
 
 | Caso | Artefato principal |
@@ -204,5 +292,8 @@ argocd app sync request-stress-poc
 | T20 | `base/mesh-policies.yaml` (VS retries + DR outlierDetection) |
 | T21 | `overlays/t21-rolling-update` + `maxUnavailable: 0` |
 | T22 | `overlays/t22-broken-release` + restore `overlays/prod` |
+| T23 | `overlays/t23-alerts` (ServiceMonitor + PrometheusRule) + `/metrics` |
+| T24 | `overlays/t24-latency-delay` (VS `fault.delay`) |
 | GitOps | `argocd/application.yaml` |
 | Mesh | `cluster/servicemesh-controlplane.yaml` |
+| UWM | `cluster-monitoring-config` (`enableUserWorkload: true`) |
